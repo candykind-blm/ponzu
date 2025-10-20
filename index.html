@@ -2,7 +2,9 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="OBS用効果音リモートコントロールシステム">
+    <meta name="theme-color" content="#1a1a1a">
     <title>OBSポン出しツール</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -10,37 +12,83 @@
 
     <div class="container">
         <header class="header">
-            <h1>OBSポン出しツール</h1>
+            <h1>🎵 OBSポン出しツール</h1>
             <div class="controls">
-                <button id="volume-mode-btn">🔊 音量調整</button>
-                <button id="settings-btn">⚙️ 設定</button>
-                <button id="stop-all-btn">⏹️ 全停止</button>
+                <button id="sort-mode-btn" aria-label="並び替えモード切り替え">🔀 並び替え</button>
+                <button id="volume-mode-btn" aria-label="音量調整モード切り替え">🔊 音量調整</button>
+                <button id="settings-btn" aria-label="設定を開く">⚙️ 設定</button>
+                <button id="stop-all-btn" aria-label="全ての音声を停止">⏹️ 全停止</button>
                 <div class="master-volume">
                     <label for="master-volume">マスター:</label>
-                    <input type="range" id="master-volume" min="0" max="1" step="0.01" value="1">
+                    <input type="range" id="master-volume" min="0" max="1" step="0.01" value="1" aria-label="マスター音量">
                 </div>
             </div>
         </header>
 
-        <main id="sound-board" class="sound-board">
+        <main id="sound-board" class="sound-board" role="main" aria-label="効果音ボード">
             <!-- サウンドボタンはここに動的に追加されます -->
         </main>
 
-        <div id="settings-modal" class="modal">
+        <div id="settings-modal" class="modal" role="dialog" aria-labelledby="settings-title" aria-hidden="true">
             <div class="modal-content">
-                <span class="close-btn">&times;</span>
-                <h2>設定</h2>
-                <div class="setting-item">
-                    <label for="columns-input">カラム数:</label>
-                    <input type="number" id="columns-input" min="1" max="10" value="3">
+                <span class="close-btn" aria-label="閉じる">&times;</span>
+                <h2 id="settings-title">⚙️ 設定</h2>
+                
+                <div class="settings-section">
+                    <h3>📊 表示設定</h3>
+                    <div class="setting-item">
+                        <label for="columns-input">
+                            <span class="setting-label">グリッドカラム数</span>
+                            <span class="setting-description">横に並べるボタンの数 (1〜10)</span>
+                        </label>
+                        <input type="number" id="columns-input" min="1" max="10" value="3" aria-label="グリッドのカラム数">
+                    </div>
+                    <div class="setting-item">
+                        <label for="sort-by">
+                            <span class="setting-label">並び順</span>
+                            <span class="setting-description">
+                                <strong>名前順:</strong> ファイル名で並び替え<br>
+                                <strong>カテゴリ順:</strong> フォルダごとにグループ化<br>
+                                <strong>カスタム:</strong> 並び替えモードで自由に配置
+                            </span>
+                        </label>
+                        <select id="sort-by" aria-label="並び順の選択">
+                            <option value="name">名前順</option>
+                            <option value="category">カテゴリ順</option>
+                            <option value="custom">カスタム (手動)</option>
+                        </select>
+                    </div>
+                    <div class="setting-item sort-order-wrapper">
+                        <label for="sort-order">
+                            <span class="setting-label">並び方向</span>
+                            <span class="setting-description">名前順・カテゴリ順で有効</span>
+                        </label>
+                        <select id="sort-order" aria-label="昇順または降順">
+                            <option value="asc">昇順 (A→Z / あ→ん)</option>
+                            <option value="desc">降順 (Z→A / ん→あ)</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="setting-item">
-                    <input type="checkbox" id="play-on-remote-checkbox" style="width: auto; margin-right: 10px;">
-                    <label for="play-on-remote-checkbox">このブラウザで音声を再生する</label>
+                
+                <div class="settings-section">
+                    <h3>🔊 音声設定</h3>
+                    <div class="setting-item checkbox-item">
+                        <input type="checkbox" id="play-on-remote-checkbox" aria-label="このブラウザで音声を再生">
+                        <label for="play-on-remote-checkbox">
+                            <span class="setting-label">このブラウザで音声を再生する</span>
+                            <span class="setting-description">OBS以外のブラウザでも音声を再生</span>
+                        </label>
+                    </div>
                 </div>
-                 <div class="setting-item">
-                    <button id="add-sound-btn">＋ 音声ファイルを追加</button>
-                    <input type="file" id="file-input" accept="audio/*" multiple style="display: none;">
+                
+                <div class="settings-section">
+                    <h3>📁 ファイル管理</h3>
+                    <div class="setting-item">
+                        <button id="add-sound-btn" class="primary-btn" aria-label="音声ファイルを追加">
+                            ＋ 音声ファイルを追加
+                        </button>
+                        <input type="file" id="file-input" accept="audio/*" multiple style="display: none;" aria-label="ファイル選択">
+                    </div>
                 </div>
             </div>
         </div>

@@ -24,7 +24,11 @@ function loadSettings() {
             settings = {
                 masterVolume: 1,
                 columns: 3,
-                playOnRemote: false, // Add this line
+                playOnRemote: false,
+                sortBy: 'name', // 'name', 'category', or 'custom'
+                sortOrder: 'asc', // 'asc' or 'desc'
+                customOrder: [], // カスタムソート順 (sound IDの配列)
+                customCategoryOrder: [], // カスタムカテゴリ順 (カテゴリ名の配列)
                 sounds: {}
             };
             saveSettings();
@@ -32,7 +36,7 @@ function loadSettings() {
         }
     } catch (err) {
         console.error('Error loading settings.json:', err);
-        settings = { masterVolume: 1, columns: 3, sounds: {} }; // Fallback to default
+        settings = { masterVolume: 1, columns: 3, playOnRemote: false, sortBy: 'name', sortOrder: 'asc', customOrder: [], customCategoryOrder: [], sounds: {} }; // Fallback to default
     }
 }
 
@@ -71,21 +75,48 @@ app.post('/api/settings', (req, res) => {
 
 
 app.get('/sounds', (req, res) => {
-    fs.readdir(soundsDirectory, (err, files) => {
-        if (err) {
-            if (err.code === 'ENOENT') {
-                // If the directory doesn't exist, create it
-                fs.mkdirSync(soundsDirectory, { recursive: true });
-                return res.json([]); // Return an empty array as there are no files yet
-            }
-            console.error("Could not list the directory.", err);
-            return res.status(500).send('Server error');
+    const categories = {};
+    
+    try {
+        // soundsディレクトリが存在しない場合は作成
+        if (!fs.existsSync(soundsDirectory)) {
+            fs.mkdirSync(soundsDirectory, { recursive: true });
+            return res.json({ categories: {}, files: [] });
         }
-        const audioFiles = files.filter(file =>
-            ['.mp3', '.wav', '.ogg', '.flac', '.m4a'].includes(path.extname(file).toLowerCase())
-        );
-        res.json(audioFiles);
-    });
+
+        const items = fs.readdirSync(soundsDirectory, { withFileTypes: true });
+        
+        // カテゴリ（フォルダ）を処理
+        items.forEach(item => {
+            if (item.isDirectory()) {
+                const categoryPath = path.join(soundsDirectory, item.name);
+                const categoryFiles = fs.readdirSync(categoryPath);
+                const audioFiles = categoryFiles.filter(file =>
+                    ['.mp3', '.wav', '.ogg', '.flac', '.m4a'].includes(path.extname(file).toLowerCase())
+                );
+                if (audioFiles.length > 0) {
+                    categories[item.name] = audioFiles.map(file => ({
+                        name: file,
+                        path: `sounds/${item.name}/${file}`
+                    }));
+                }
+            }
+        });
+
+        // ルートディレクトリの音声ファイル（カテゴリなし）
+        const rootFiles = items
+            .filter(item => item.isFile() && 
+                ['.mp3', '.wav', '.ogg', '.flac', '.m4a'].includes(path.extname(item.name).toLowerCase()))
+            .map(item => ({
+                name: item.name,
+                path: `sounds/${item.name}`
+            }));
+
+        res.json({ categories, files: rootFiles });
+    } catch (err) {
+        console.error("Could not list the directory.", err);
+        res.status(500).send('Server error');
+    }
 });
 
 const server = http.createServer(app);
@@ -167,6 +198,49 @@ server.listen(port, '0.0.0.0', () => {
     loadSettings(); // Load settings on startup
     const networkInterfaces = os.networkInterfaces();
     let ipAddress = 'localhost';
+
+    // --- サウンドファイル自動更新通知 ---
+    let lastSoundSnapshot = null;
+    function getSoundSnapshot() {
+        // soundsディレクトリの全ファイル名（カテゴリ含む）を配列で返す
+        const result = [];
+        if (!fs.existsSync(soundsDirectory)) return result;
+        const items = fs.readdirSync(soundsDirectory, { withFileTypes: true });
+        items.forEach(item => {
+            if (item.isDirectory()) {
+                const categoryPath = path.join(soundsDirectory, item.name);
+                const files = fs.readdirSync(categoryPath);
+                files.forEach(file => {
+                    result.push(`${item.name}/${file}`);
+                });
+            } else if (item.isFile()) {
+                result.push(item.name);
+            }
+        });
+        return result.sort();
+    }
+
+    function checkSoundFilesUpdate() {
+        const current = getSoundSnapshot();
+        if (!lastSoundSnapshot || current.join(',') !== lastSoundSnapshot.join(',')) {
+            lastSoundSnapshot = current;
+            broadcast(JSON.stringify({ action: 'sounds_updated' }));
+        }
+    }
+
+    // soundsディレクトリを監視
+    try {
+        fs.watch(soundsDirectory, { recursive: true }, (eventType, filename) => {
+            // 変更があったらチェック
+            setTimeout(checkSoundFilesUpdate, 300);
+        });
+    } catch (e) {
+        // 初回起動時はディレクトリがない場合もある
+        console.warn('soundsディレクトリ監視失敗:', e);
+    }
+
+    // 定期チェック（念のため）
+    setInterval(checkSoundFilesUpdate, 5000);
 
     Object.keys(networkInterfaces).forEach(ifaceName => {
         networkInterfaces[ifaceName].forEach(iface => {

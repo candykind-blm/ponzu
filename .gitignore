@@ -15,5 +15,9 @@ lerna-debug.log
 .DS_Store
 Thumbs.db
 
+# Sound files (権利関係のため除外)
+/sounds/*
+!/sounds/.gitkeep
+
 # 内部資料
 要件定義書.md
