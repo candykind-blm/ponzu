@@ -3,7 +3,8 @@ body {
     background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
     color: #f0f0f0;
     margin: 0;
-    padding: 10px;
+    padding: 0;
+    padding-top: 120px; /* ヘッダーの高さ分のスペース */
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
@@ -27,18 +28,25 @@ body.sort-mode * {
 }
 
 .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 15px 20px;
     background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%);
     color: white;
-    border-radius: 16px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    border: 1px solid #333;
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    border-bottom: 2px solid #333;
     flex-wrap: wrap;
     gap: 10px;
+    backdrop-filter: blur(10px);
+    background: linear-gradient(135deg, rgba(31, 31, 31, 0.95) 0%, rgba(42, 42, 42, 0.95) 100%);
 }
 
 .header h1 {
@@ -146,7 +154,8 @@ body.sort-mode * {
     display: grid;
     grid-template-columns: repeat(var(--columns, 3), 1fr);
     gap: 15px;
-    padding-bottom: 20px;
+    padding: 20px 10px;
+    padding-bottom: 40px;
 }
 
 /* カテゴリボックス全体 */
@@ -670,6 +679,10 @@ body.sort-mode * {
 
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
+    body {
+        padding-top: 180px; /* モバイルでヘッダーが高くなるため調整 */
+    }
+    
     .header {
         flex-direction: column;
         align-items: stretch;

@@ -1,4 +1,5 @@
 @echo off
+title Ponzu_Server
 cd /d %~dp0
 
 REM Check for Node.js

@@ -6,7 +6,7 @@ const os = require('os');
 const { WebSocketServer } = require('ws');
 
 const app = express();
-const port = 3000; /*起動ポートは必要に応じて変更*/
+const port = 3939; /*起動ポートは必要に応じて変更*/
 
 const soundsDirectory = path.join(__dirname, 'sounds');
 const settingsFilePath = path.join(__dirname, 'settings.json');
