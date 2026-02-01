@@ -262,8 +262,8 @@ body.sort-mode * {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100px;
-    padding: 12px;
+    min-height: 50px;
+    padding: 8px;
     transition: all 0.2s ease;
     box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
     border: 2px solid rgba(255, 255, 255, 0.1);
